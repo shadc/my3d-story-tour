@@ -1,22 +1,10 @@
-import { length, lineString, along, bbox, bboxPolygon, transformScale } from '@turf/turf';
-import { Polyline } from 'esri/geometry';
+import { length, lineString, along, point as turfPoint, nearestPointOnLine } from '@turf/turf';
+import { Polyline, Point as EsriPoint } from 'esri/geometry';
 import FeatureSet from 'esri/tasks/support/FeatureSet';
 import GeoJSONLayer from 'esri/layers/GeoJSONLayer';
 import Graphic from 'esri/Graphic'
-import { number } from 'prop-types';
 
-
-const markerSymbol = {
-  type: "simple-marker", // autocasts as new SimpleMarkerSymbol()
-  color: [0, 255, 255, .25],
-  size: 1,
-  outline: { // autocasts as new SimpleLineSymbol()
-      color: [0, 255, 255, 1],
-      width: "1px"
-  }
-};
-
-
+ 
 const MapUtils = {
   getSplit: async (routeLayer : GeoJSONLayer) => {
     const featureSet : FeatureSet = await routeLayer.queryFeatures();
@@ -24,8 +12,7 @@ const MapUtils = {
       const polygon = feature.geometry as Polyline;
       const line = lineString(polygon.paths[0])
       const distance = length(line, { units: 'meters' }) * 3.28084;
-      const d = Math.floor(distance / 1000);
-      //if (d >= 10) return 10;
+      const d = Math.floor(distance / 300); 
       if (d <= 5) return 5;
       return d;
     }));
@@ -55,9 +42,28 @@ const MapUtils = {
     query.where = "OBJECTID = " + (i);
     return (await routeLayer.queryFeatures(query)).features as Graphic[];
   },
-  setGraphicPosition: (coords : number[]) => {
 
+  getPicRouteIndex: async (routeCoords : [[]], route : string,  picsLayer: GeoJSONLayer) => {
+    const query = picsLayer.createQuery();
+    query.where = "Route = '" + route + "'";
+    const featureSet : FeatureSet = await picsLayer.queryFeatures(query);
+    const line = lineString(routeCoords);
+    return featureSet.features.map(feature => {
+      const esriPt = feature.geometry as EsriPoint;
+      let turfPt = turfPoint([esriPt.longitude, esriPt.latitude]);
+      let snapped = nearestPointOnLine(line, turfPt, {units: 'meters'});
+      return snapped.properties.index as number;
+    });
+  },
+
+  getPics: async (picsLayer: GeoJSONLayer) => {
+    const featureSet : FeatureSet = await picsLayer.queryFeatures();
+    return featureSet.features.map(feature => {
+      return null;
+    });
   }
+
+
 };
 
 

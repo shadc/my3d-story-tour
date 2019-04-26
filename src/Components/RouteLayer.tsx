@@ -3,14 +3,12 @@ import { loadModules } from '@esri/react-arcgis';
 import { Extent } from 'esri/geometry';
 import FeatureSet from 'esri/tasks/support/FeatureSet';
 
-
 interface IProps{
  view: any,
  map: any,
  gist: string,
  setTour: any
 }
-
 
 const RouteLayer = (props : IProps) => {
     const [layers, setLayers] = useState();
@@ -35,34 +33,33 @@ const RouteLayer = (props : IProps) => {
                 },
             });
 
+
             const picsLayer = new GeoJSONLayer({
                  url: props.gist,
                  geometryType: "point",
                  definitionExpression: "Pic is not NULL",
-                // ----------  NOT WORKING ----------------------------------------------
-                //  renderer: {
-                //     type: "simple",  // autocasts as new SimpleRenderer()
-                //     symbol: {
-                //         type: "picture-marker",  // autocasts as new SimpleMarkerSymbol()
-                //         url: "../camera-64x64.png",
-                //         width: "20px",
-                //         height: "20px"
-                //     }
-                // }
-                renderer: {
+                // ----------  Only works with full path, due to webpack image encoding ---------------------------
+                 renderer: {
                     type: "simple",  // autocasts as new SimpleRenderer()
                     symbol: {
-                        type: "simple-marker",  // autocasts as new SimpleMarkerSymbol()
-                        size: 6,
-                        color: [255, 0, 0, .25],
-                        outline: {  // autocasts as new SimpleLineSymbol()
-                            color: [255, 0, 0, 1],
-                            width: "1px"
-                        }
+                        type: "picture-marker",  // autocasts as new SimpleMarkerSymbol()
+                        url: "http://shadc.github.io/presentations/images/camera-64x64.png",
+                        width: "20px",
+                        height: "20px"
                     }
                 },
-
-
+                // renderer: {
+                //     type: "simple",  // autocasts as new SimpleRenderer()
+                //     symbol: {
+                //         type: "simple-marker",  // autocasts as new SimpleMarkerSymbol()
+                //         size: 6,
+                //         color: [255, 0, 0, .25],
+                //         outline: {  // autocasts as new SimpleLineSymbol()
+                //             color: [255, 0, 0, 1],
+                //             width: "1px"
+                //         }
+                //     }
+                // },
             })
 
             const poiLayer = new GeoJSONLayer({

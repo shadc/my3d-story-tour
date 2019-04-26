@@ -1,3 +1,92 @@
+@keyframes zoomIn {
+  0% {
+    max-width:1vw;
+    padding: 0 0;
+    opacity: 0;
+    font-size: 0;
+  }
+  100% {
+    max-width:  90vw;
+    padding: 1vh 1vh; 
+    opacity: 1;
+    font-size: 2.5vh;
+  }
+}
+@keyframes zoomOut {
+  0% {
+    font-size: 2.5vh;
+    max-width:  90vw;
+    padding: 1vh 1vh; 
+    opacity: 1;
+  }
+  100% {
+    font-size: .5vh;
+    max-width:  15vw;
+    padding: .5vh .5vh; 
+    opacity: 1;
+  }
+}
+@keyframes movePic {
+  0% {
+    top: 50vh;
+    left: 50vw;
+  }
+  100% {
+    top : var(--tx);
+    left: 90vw;
+  }
+}
+
+.polaroidInitial{
+  font-size: 0;
+  max-width:1vw;
+  padding: 0 0;
+  opacity: 0;
+}
+ 
+.polaroid{
+  background-color: white; 
+  transform: rotate(-2deg); 
+}
+li:nth-child(even) .polaroid{
+  transform: rotate(2deg);
+}
+
+.polaroidCenter{
+  list-style-type: none;
+  position: absolute;
+  top: 50vh;
+  left: 50vw;
+  margin-right: -50%;
+  transform: translate(-50%, -50%);
+  font-family: 'Cedarville Cursive', sans-serif;
+}
+
+.polaroidCenter:hover{ 
+  z-index:555555;
+}
+
+.animateIn{
+  animation: zoomIn 2s forwards; 
+}
+.animateOut{  
+  animation: zoomOut 1s forwards; 
+}  
+.animateRight{
+  animation: movePic 1s forwards;
+}
+
+.animateRight:hover{ 
+  z-index:555555;
+}
+
+.picImage{
+  max-width: 90vw;
+  width:100%;
+  max-height: 80vh;
+}
+
+
 .btn-group {
   position: absolute;
   text-align: center;
@@ -29,7 +118,6 @@
   background: #FFF;
   height: 90px;
   color: #002e5d;
-  z-index: 1;
   font-size: 28px;
   margin-left: 30px;
   margin-right: 30px;
@@ -39,12 +127,18 @@
   font-weight: bold;
   color: red;
   font-family: 'Cedarville Cursive', sans-serif;
-  float: right;
 }
 
 .tour-title *{
   margin-top: 5px;
   margin-bottom: 5px;
   display: inline-block
+}
+
+.tour-caption {
+  font-size: .80em;
+  display:inline-block;
+  font-family: 'Cedarville Cursive', sans-serif;
+   font-weight: bold;
 }
 
