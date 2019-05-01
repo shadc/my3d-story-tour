@@ -6,12 +6,11 @@ import { Polyline, Point } from 'esri/geometry';
 import Graphic from 'esri/Graphic'
 
 
-import Bookmarks from "./Components/Bookmarks";
+import Basemaps from "./Components/Basemaps";
 import Header from "./Components/Header";
 import RouteLayer from "./Components/RouteLayer";
 import MapUtils from './Components/MapUtils';
 import RoutePicture from './Components/RoutePicture';
-import { length } from '@turf/turf';
 
 const gist = "https://gist.githubusercontent.com/shadc/5f28c0d4f3d3fdf1e789/raw/4495bf6e4194adb1ce215c032c93c1fc8273e32a/Bluebird%2520Day%2520at%2520Mt.%2520Bachelor.geojson";
 
@@ -29,8 +28,8 @@ interface ITour {
   coordNum: number
 }
 
-const tour = {} as ITour;
 
+const tour = {} as ITour;
 
 
 const App = () => {
@@ -38,6 +37,8 @@ const App = () => {
   const [caption, setCaption] = useState('');
   const [pics, setPics] = useState([] as Graphic[]);
   const [picAction, setPicAction] = useState([0, '']);
+
+
 
   const onStartTourClick = async () => {
     tour.routeNum = 1; //1 base;
@@ -127,18 +128,17 @@ const App = () => {
     <>
       <Header caption={caption} title={title} onClick={onStartTourClick} />
 
-      {/* <Bookmarks /> */}
-
       <Scene
         loaderOptions={loaderOptions}
         className='mapcontainer'
-        mapProperties={{ basemap: 'satellite', ground: "world-elevation" }}
+        mapProperties={{ ground: "world-elevation" }} //basemap: 'satellite',
         viewProperties={{
           center: [-121.6788, 44.0033],
           zoom: 12
         }}
       >
         <RouteLayer view={Scene} map={Map} gist={gist} setTour={setTour} />
+        <Basemaps view={Scene} map={Map}/> 
       </Scene>
 
       {<ul>

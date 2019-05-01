@@ -42,7 +42,6 @@ const MapUtils = {
     query.where = "OBJECTID = " + (i);
     return (await routeLayer.queryFeatures(query)).features as Graphic[];
   },
-
   getPicRouteIndex: async (routeCoords : [[]], route : string,  picsLayer: GeoJSONLayer) => {
     const query = picsLayer.createQuery();
     query.where = "Route = '" + route + "'";
@@ -50,20 +49,11 @@ const MapUtils = {
     const line = lineString(routeCoords);
     return featureSet.features.map(feature => {
       const esriPt = feature.geometry as EsriPoint;
-      let turfPt = turfPoint([esriPt.longitude, esriPt.latitude]);
-      let snapped = nearestPointOnLine(line, turfPt, {units: 'meters'});
+      const turfPt = turfPoint([esriPt.longitude, esriPt.latitude]);
+      const snapped = nearestPointOnLine(line, turfPt, {units: 'meters'});
       return snapped.properties.index as number;
     });
-  },
-
-  getPics: async (picsLayer: GeoJSONLayer) => {
-    const featureSet : FeatureSet = await picsLayer.queryFeatures();
-    return featureSet.features.map(feature => {
-      return null;
-    });
   }
-
-
 };
 
 
