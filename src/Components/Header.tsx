@@ -1,6 +1,4 @@
-import React, { HTMLAttributes } from 'react';
-import { checkPropTypes } from 'prop-types';
-
+import React from 'react';
 
 interface IProps{
     title: string,

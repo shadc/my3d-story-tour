@@ -1,8 +1,6 @@
 
-import React, { MouseEvent, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { loadModules  } from '@esri/react-arcgis';
-
-import Basemap from 'esri/Basemap';
 import basemapdata from '../basemaps.json';
 
 interface IProps{
@@ -12,12 +10,12 @@ interface IProps{
 
 const Basemaps = (props: IProps) => {
     const [basemaps, setBasemaps] = useState();
-    const [slide, setSlide] = useState('basemapsSlideup');
+    const [basemapsCSS, setBasemapsCSS] = useState('basemapsSlideup');
 
     useEffect(() => {
 
-        loadModules(["esri/widgets/BasemapGallery", "esri/layers/WebTileLayer",  "esri/Basemap", "esri/widgets/BasemapGallery/support/LocalBasemapsSource"]).
-            then(([BasemapGallery, WebTileLayer, Basemap, LocalBasemapsSource]) => {
+        loadModules(["esri/layers/WebTileLayer",  "esri/Basemap"]).
+            then(([WebTileLayer, Basemap]) => {
 
                 const basemapsArr = basemapdata.basemaps.map((b, index) => {
                     const wtl = new WebTileLayer({
@@ -35,21 +33,21 @@ const Basemaps = (props: IProps) => {
                 setBasemaps(basemapsArr);
             }).catch((err) => console.error(err))
 
-
-        return function cleanup() {
-            setBasemaps(null);
-        };
+            //document.addEventListener('mousedown', handleClick, false);
+            return () => {
+                setBasemaps(null);
+                //document.removeEventListener('mousedown', handleClick, false);
+             }
     }, []);
 
-
-    function handleClick(e: MouseEvent) {
+    
+    function handleClick(e: any) {
         e.preventDefault();
-
         if (e.currentTarget.tagName.toLowerCase() == 'a') {
             var elementPos = basemapdata.basemaps.map(function(x) {return x.id; }).indexOf(e.currentTarget.innerHTML);
-            props.map.basemap = basemaps[elementPos]; // as Basemap;
+            props.map.basemap = basemaps[elementPos];
         }        
-        (slide == 'basemapsSlideup') ? setSlide('basemapsSlidedown') : setSlide('basemapsSlideup');
+        (basemapsCSS == 'basemapsSlideup') ? setBasemapsCSS('basemapsSlidedown') : setBasemapsCSS('basemapsSlideup');
       }
 
     return (
@@ -60,7 +58,7 @@ const Basemaps = (props: IProps) => {
                 <span className="esri-icon-font-fallback-text">Change Basemap</span>
             </div>
 
-            <div className={slide}>
+            <div className={basemapsCSS}>
                 <ul className="basemapbuttons">
                     {basemapdata.basemaps.map((b, index) =>
                         <li key={index}>

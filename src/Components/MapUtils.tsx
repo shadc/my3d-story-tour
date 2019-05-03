@@ -1,4 +1,4 @@
-import { length, lineString, along, point as turfPoint, nearestPointOnLine } from '@turf/turf';
+import { length, lineString, along, point as turfPoint, nearestPointOnLine,  bearing } from '@turf/turf';
 import { Polyline, Point as EsriPoint } from 'esri/geometry';
 import FeatureSet from 'esri/tasks/support/FeatureSet';
 import GeoJSONLayer from 'esri/layers/GeoJSONLayer';
@@ -12,7 +12,7 @@ const MapUtils = {
       const polygon = feature.geometry as Polyline;
       const line = lineString(polygon.paths[0])
       const distance = length(line, { units: 'meters' }) * 3.28084;
-      const d = Math.floor(distance / 300); 
+      const d = Math.floor(distance / 400); 
       if (d <= 5) return 5;
       return d;
     }));
@@ -53,6 +53,18 @@ const MapUtils = {
       const snapped = nearestPointOnLine(line, turfPt, {units: 'meters'});
       return snapped.properties.index as number;
     });
+  },
+  getUrlVars: (param : string) => {
+    const urlParams = new URLSearchParams(window.location.search);
+    let p = urlParams.get(param);
+    if (p && p.toLowerCase() == 'yes') return 'true';
+    if (p && p.toLowerCase() == 'no') return 'false';
+    if (p) return p;
+    return 'false';
+  },
+  getHeading: (point1 : number[], point2 : number[]) => {
+    const b = bearing(turfPoint([point1[0], point1[1]]), turfPoint([point2[0], point2[1]]));
+    return (b < 0) ? 360 + b : b;
   }
 };
 

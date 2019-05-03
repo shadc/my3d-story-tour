@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { loadModules } from '@esri/react-arcgis';
-import { Extent } from 'esri/geometry';
 import FeatureSet from 'esri/tasks/support/FeatureSet';
 
 interface IProps{
@@ -128,7 +127,6 @@ const RouteLayer = (props : IProps) => {
             annimationGraphicsLayer.elevationInfo = currentElevationInfo;
             props.map.add(annimationGraphicsLayer);
 
-
             let markerSymbol = {
                 type: "simple-marker", // autocasts as new SimpleMarkerSymbol()
                 color: [0, 255, 255, .25],
@@ -153,10 +151,6 @@ const RouteLayer = (props : IProps) => {
                      annimationGraphicsLayer.add(pointGraphic);
                      props.setTour(routeLayer, picsLayer, props.view, pointGraphic);
                  });
-
-                routeLayer.queryExtent().then((response : Extent) =>{
-                    props.view.goTo(response.extent.expand(2))
-                })
             })
 
             setLayers([[routeLayer, picsLayer, poiLayer]]);

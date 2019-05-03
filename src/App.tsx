@@ -2,17 +2,15 @@ import React, { useState } from 'react';
 import './App.css';
 import { Map, Scene } from '@esri/react-arcgis';
 import GeoJSONLayer from 'esri/layers/GeoJSONLayer';
-import { Polyline, Point } from 'esri/geometry';
+import { Polyline, Point, Extent } from 'esri/geometry';
 import Graphic from 'esri/Graphic'
-
 
 import Basemaps from "./Components/Basemaps";
 import Header from "./Components/Header";
 import RouteLayer from "./Components/RouteLayer";
 import MapUtils from './Components/MapUtils';
 import RoutePicture from './Components/RoutePicture';
-
-const gist = "https://gist.githubusercontent.com/shadc/5f28c0d4f3d3fdf1e789/raw/4495bf6e4194adb1ce215c032c93c1fc8273e32a/Bluebird%2520Day%2520at%2520Mt.%2520Bachelor.geojson";
+import Slider from './Components/Slider';
 
 
 interface ITour {
@@ -28,8 +26,12 @@ interface ITour {
   coordNum: number
 }
 
+const _tour = {} as ITour;
 
-const tour = {} as ITour;
+let _gist = "https://gist.githubusercontent.com/shadc/5f28c0d4f3d3fdf1e789/raw/4495bf6e4194adb1ce215c032c93c1fc8273e32a/Bluebird%2520Day%2520at%2520Mt.%2520Bachelor.geojson";
+let _interval = 0;
+let _sliderNum = 10;
+let _sliderChanged = false;
 
 
 const App = () => {
@@ -39,18 +41,20 @@ const App = () => {
   const [picAction, setPicAction] = useState([0, '']);
 
 
+  const droneView = MapUtils.getUrlVars('droneView') == 'true' ? true : false;
+  const hidePhotos = MapUtils.getUrlVars('hidePhotos') == 'true' ? true: false;
+  const geoJson = MapUtils.getUrlVars('geoJson') == 'false' ? _gist : MapUtils.getUrlVars('geoJson');
 
   const onStartTourClick = async () => {
-    tour.routeNum = 1; //1 base;
-    tour.coordNum = 0; //0 base;
+    _tour.routeNum = 1; //1 base;
+    _tour.coordNum = 0; //0 base;
     startRoute();
   }
-  
-  let interval: number;
+
   const startRoute = async () => {
-    if (tour.map.graphics) tour.map.graphics.removeAll();
-    tour.routeLayer.definitionExpression = "OBJECTID < " + tour.routeNum;
-    const graphics = await MapUtils.getGraphics(tour.routeLayer, tour.routeNum);
+    if (_tour.map.graphics) _tour.map.graphics.removeAll();
+    _tour.routeLayer.definitionExpression = "OBJECTID < " + _tour.routeNum;
+    const graphics = await MapUtils.getGraphics(_tour.routeLayer, _tour.routeNum);
 
     if (!graphics.length) {
       setCaption('');
@@ -58,70 +62,119 @@ const App = () => {
     }
 
     const featGeom = graphics[0].geometry as Polyline;
-    tour.routeCoords = MapUtils.getRouteCoords(featGeom, tour.splits);
+    _tour.routeCoords = MapUtils.getRouteCoords(featGeom, _tour.splits);
     setCaption(graphics[0].getAttribute("Caption"));
 
-    tour.picIndexes = await MapUtils.getPicRouteIndex(tour.routeCoords, graphics[0].getAttribute("Route"), tour.picsLayer);
+    _tour.picIndexes = await MapUtils.getPicRouteIndex(_tour.routeCoords, graphics[0].getAttribute("Route"), _tour.picsLayer);
 
-    tour.map.goTo(featGeom).then(() => {
-      interval = window.setInterval(startRouteInterval, 4);
-    })
+    if (droneView) {
+      _interval = window.setInterval(startRouteInterval, intTime(_sliderNum));
+    } else {
+      _tour.map.goTo(featGeom).then(() => {
+        _interval = window.setInterval(startRouteInterval, intTime(_sliderNum));
+      })
+    }
 
   }
 
 
-  let picIndex : number = 1; 
+  let picIndex: number = 1;
   const startRouteInterval = () => {
 
     //-- Move to the next route if at the end of the interval
-    if (tour.coordNum > (tour.routeCoords.length - 1)) {
-      clearInterval(interval);
-      tour.coordNum = 0;
-      tour.routeNum++;
+    if (_tour.coordNum > (_tour.routeCoords.length - 1)) {
+      clearInterval(_interval);
+      _tour.coordNum = 0;
+      _tour.routeNum++;
       setTimeout(function () { startRoute(); }, 1000);
       return;
     }
 
+    if (_sliderChanged) {
+      clearInterval(_interval);
+      _interval = window.setInterval(startRouteInterval, intTime(_sliderNum));
+      _sliderChanged = false;
+    }
+
     //-- Move the graphic
-    const [longitude, latitude] = tour.routeCoords[tour.coordNum];
+    const [longitude, latitude] = _tour.routeCoords[_tour.coordNum];
     const point = { type: "point", longitude, latitude } as Point;
-    tour.pointGraphic.geometry = point;
+    _tour.pointGraphic.geometry = point;
 
     //-- Create Breadcrumb
-    const graphic = tour.pointGraphic.clone();
+    const graphic = _tour.pointGraphic.clone();
     graphic.symbol.set('size', 1);
     graphic.geometry = point;
-    tour.map.graphics.add(graphic);
+    _tour.map.graphics.add(graphic);
+
+    if (droneView && _tour.coordNum % 2 && _tour.map.stationary) {
+      const point1 = (_tour.coordNum > 10) ? _tour.routeCoords[_tour.coordNum - 10] : _tour.routeCoords[_tour.coordNum];
+      const point2 = (_tour.coordNum < _tour.routeCoords.length - 10) ? _tour.routeCoords[_tour.coordNum + 10] : _tour.routeCoords[_tour.coordNum];
+      let heading = MapUtils.getHeading(point1, point2);
+
+      _tour.map.goTo({
+        center: [longitude, latitude],
+        zoom: 16,
+        heading: heading,
+        tilt: (_tour.map.camera.tilt > 1) ? _tour.map.camera.tilt : 60
+      },
+        {
+          speedFactor: .9, // animation is 10 times slower than default
+          easing: "linear" // easing function to slow down when reaching the target
+        }
+      );
+    }
 
     //-- Collide with picture???
-    if (tour.picIndexes.includes(tour.coordNum)) {
-      clearInterval(interval);
+    if (!hidePhotos && _tour.picIndexes.includes(_tour.coordNum)) {
+      clearInterval(_interval);
       setPicAction([picIndex, 'active']);
       setTimeout(function () {
         setPicAction([picIndex, 'deactive']);
         setTimeout(function () {
-          interval = window.setInterval(startRouteInterval, 4);
+          _interval = window.setInterval(startRouteInterval, intTime(_sliderNum));
           picIndex++;
         }, 1000);
       }, 4000);
     }
-    tour.coordNum++;
+    _tour.coordNum++;
   }
 
   const setTour = async (routeLayer: GeoJSONLayer, picsLayer: GeoJSONLayer, map: any, pointGraphic: Graphic) => {
-    tour.routeLayer = routeLayer;
-    tour.picsLayer = picsLayer;
-    tour.map = map;
-    tour.pointGraphic = pointGraphic;
-    tour.routeNum = 1, //1 base;
-    tour.coordNum = 0, //0 base;
-    tour.scales = MapUtils.getScales([4]);
-    tour.splits = await MapUtils.getSplit(routeLayer); //.then(result => tour.splits = result);
+    _tour.routeLayer = routeLayer;
+    _tour.picsLayer = picsLayer;
+    _tour.map = map;
+    _tour.pointGraphic = pointGraphic;
+    _tour.routeNum = 1, //1 base;
+    _tour.coordNum = 0, //0 base;
+    _tour.scales = MapUtils.getScales([4]);
+    _tour.splits = await MapUtils.getSplit(routeLayer); //.then(result => _tour.splits = result);
+
+    routeLayer.queryExtent().then((response : Extent) =>{
+      _tour.map.goTo(response.extent.expand(2), {easing : 'in-out-expo'})
+    })
 
     setPics(((await picsLayer.queryFeatures()).features as Graphic[]));
-    const filename = decodeURI(decodeURI(gist.substring(gist.lastIndexOf('/')+1)));
+    const filename = decodeURI(decodeURI(geoJson.substring(geoJson.lastIndexOf('/') + 1)));
     setTitle(filename.substr(0, filename.lastIndexOf('.')) || filename);
   }
+
+  const scales = [4] // Start at 4 because it's the minimum milliseconds HTML 5 setinterval spec will go.
+  for (let i = 0; i < 19; i++) {
+    const ts = scales[0];
+    const scaleVal = (ts * ((ts / 100) + 1.03))
+    scales.unshift(scaleVal);
+  }
+
+  const intTime = (val: number) => {
+    return scales[val - 1]
+  }
+
+  const sliderChange = (num: any) => {
+    _sliderNum = num;
+    _sliderChanged = true;
+  }
+
 
   const loaderOptions = { url: "http://js.arcgis.com/4.11" };
   return (
@@ -133,12 +186,13 @@ const App = () => {
         className='mapcontainer'
         mapProperties={{ ground: "world-elevation" }} //basemap: 'satellite',
         viewProperties={{
-          center: [-121.6788, 44.0033],
-          zoom: 12
+          //center: [-121.6788, 44.0033],
+          zoom: 2
         }}
       >
-        <RouteLayer view={Scene} map={Map} gist={gist} setTour={setTour} />
-        <Basemaps view={Scene} map={Map}/> 
+        <Slider handleChange={sliderChange} initSliderVal={_sliderNum} />
+        <RouteLayer view={Scene} map={Map} gist={geoJson} setTour={setTour} />
+        <Basemaps view={Scene} map={Map} />
       </Scene>
 
       {<ul>
@@ -153,7 +207,7 @@ const App = () => {
           />
         )}
       </ul>}
-      
+
     </>
   );
 }
