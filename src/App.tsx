@@ -176,7 +176,7 @@ const App = () => {
   }
 
 
-  const loaderOptions = { url: "http://js.arcgis.com/4.11" };
+  const loaderOptions = { url: "https://js.arcgis.com/4.11" };
   return (
     <>
       <Header caption={caption} title={title} onClick={onStartTourClick} />
