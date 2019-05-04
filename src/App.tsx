@@ -203,7 +203,7 @@ const App = () => {
             id={index + 1}
             picAction={picAction}
             caption={pic.getAttribute("Caption")}
-            img={"http://shadc.github.io/presentations/" + pic.getAttribute("Pic")}
+            img={"https://shadc.github.io/presentations/" + pic.getAttribute("Pic")}
           />
         )}
       </ul>}
