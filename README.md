@@ -6,6 +6,12 @@ The best way I can describe this is a mapping based temporal photo journal.  [Th
 at Mt. Bachelor, but you can create your own story.  [Follow along my demo](https://shadc.github.io/my3d-story-tour/debug/index.html) as I ski and take pictures of a great day on the mountain. 
 
 [Check out drone view](https://shadc.github.io/my3d-story-tour/debug/index.html?droneView=yes). It's a work in progress, and might make you sick, but it is pretty cool.
+<br /><br />
+**Controls...** <br />
+Change the basemap to some unusual choices... MapBox Outdoors is one of my favorites.
+<br />
+Control the speed of the tour using the slider
+<br /><br />
 
 **URL Parameters...** <br />
 Drone View follows you as if there were a drone behind you.  Default is no. <br />
