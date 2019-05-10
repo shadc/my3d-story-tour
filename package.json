@@ -22,15 +22,18 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
-  },
-  "eslintConfig": {
-    "extends": "react-app"
+    "eject": "react-scripts eject",
+    "lint": "tslint -c tslint.json 'src/**/*.{ts,tsx}'"
   },
   "browserslist": [
     ">0.2%",
     "not dead",
     "not ie <= 11",
     "not op_mini all"
-  ]
+  ],
+  "devDependencies": {
+    "eslint-plugin-react": "^7.13.0",
+    "tslint": "^5.16.0",
+    "tslint-react": "^4.0.0"
+  }
 }

@@ -1,0 +1,49 @@
+{
+    "extends": [
+        "tslint:latest",
+        "tslint-react"
+    ],
+    "linterOptions": {
+        "exclude": [
+            "config/**/*.js",
+            "node_modules/**/*.ts",
+            "coverage/lcov-report/*.js"
+        ]
+    },
+    "compilerOptions": {
+        "plugins": [
+            {
+                "name": "typescript-tslint-plugin"
+            }
+        ]
+    },
+    "rules": {
+        "max-line-length": {
+            "options": [
+                180
+            ]
+        },
+        "jsx-no-multiline-js": false,
+        "no-implicit-dependencies": [
+            true,
+            [
+                "esri"
+            ]
+        ],
+        "no-submodule-imports": [
+            true,
+            "esri"
+        ],
+        "no-console": {
+            "severity": "warning",
+            "options": [
+                "debug",
+                "info",
+                "log",
+                "time",
+                "timeEnd",
+                "trace"
+            ]
+        }
+    }
+}

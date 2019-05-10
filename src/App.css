@@ -6,13 +6,10 @@
     font-size: .5vh; 
     line-height: .5vh;
   }
-  99%{
-
-  }
   100% {
     line-height: 3vh;
     font-size: 2.5vh;  
-    max-width:  90vw;
+    max-width: 80vw;
     padding: 1vh 1vh; 
     opacity: 1;
   }
@@ -23,7 +20,7 @@
   0% {
     font-size: 2.5vh;
     line-height: 2.5vh;
-    max-width:  90vw;
+    max-width: 80vw;
     padding: 1vh 1vh; 
     opacity: 1;
   }
@@ -141,12 +138,10 @@ li:nth-child(even) .polaroid{
 
 /* Basemap  buttons/slider  */
 
-.basemap-buttons-container {
+.basemap-button-container {
   position: absolute;
   left: 15px;
   top: 210px;
-  z-Index: 31;
-  display:inline;
 }
 
 .basemapbuttons {
@@ -177,6 +172,9 @@ li:nth-child(even) .polaroid{
 
 
 .basemapsSlideup, .basemapsSlidedown {
+  position: absolute;
+  top: -6px;
+  left: 60px;
   max-height: 0;            
   overflow-y: hidden;
   -webkit-transition: max-height 0.5s ease-in-out;
