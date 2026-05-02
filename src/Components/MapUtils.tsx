@@ -2,7 +2,6 @@ import { along, bearing, length, lineString, nearestPointOnLine, point as turfPo
 import { Point as EsriPoint, Polyline } from "esri/geometry";
 import Graphic from "esri/Graphic";
 import GeoJSONLayer from "esri/layers/GeoJSONLayer";
-import FeatureSet from "esri/tasks/support/FeatureSet";
 
 const MapUtils = {
     getGraphics: async (routeLayer: GeoJSONLayer, i: number) => {
@@ -10,14 +9,14 @@ const MapUtils = {
         query.where = "OBJECTID = " + (i);
         return (await routeLayer.queryFeatures(query)).features as Graphic[];
     },
-    getHeading: (point1: number[], point2: number[]) => {
+    getHeading: (point1: [number, number], point2: [number, number]) => {
         const b = bearing(turfPoint([point1[0], point1[1]]), turfPoint([point2[0], point2[1]]));
         return (b < 0) ? 360 + b : b;
     },
-    getPicRouteIndex: async (routeCoords: [[]], route: string, picsLayer: GeoJSONLayer) => {
+    getPicRouteIndex: async (routeCoords: [number, number][], route: string, picsLayer: GeoJSONLayer) => {
         const query = picsLayer.createQuery();
         query.where = "Route = '" + route + "'";
-        const featureSet: FeatureSet = await picsLayer.queryFeatures(query);
+        const featureSet = await picsLayer.queryFeatures(query);
         const line = lineString(routeCoords);
         return featureSet.features.map((feature) => {
             const esriPt = feature.geometry as EsriPoint;
@@ -26,19 +25,20 @@ const MapUtils = {
             return snapped.properties.index as number;
         });
     },
-    getRouteCoords: (polyline: Polyline, splits: number) => {
+    getRouteCoords: (polyline: Polyline, splits: number): [number, number][] => {
         // Interpolate Polyline and create array of points along it's route.
-        const routeCoords = [];
+        const routeCoords: [number, number][] = [];
         const line = lineString(polyline.paths[0]);
         const routeLength = length(line, { units: "meters" }) * 3.28084;
         for (let i = 0; i <= (routeLength / splits); i++) {
-            const coord: any = along(line, (i * (splits * 0.3048)), { units: "meters" });
-            routeCoords.push([coord.geometry.coordinates[0], coord.geometry.coordinates[1]]);
+            const coord = along(line, (i * (splits * 0.3048)), { units: "meters" });
+            const [longitude, latitude] = coord.geometry.coordinates as [number, number];
+            routeCoords.push([longitude, latitude]);
         }
         return routeCoords;
     },
     getScales: (initScale: number[]) => {
-        const tempScales = initScale;
+        const tempScales = [...initScale];
         for (let i = 0; i < 19; i++) {
             const thisScale = tempScales[0];
             const scaleVal = (thisScale * ((thisScale / 100) + 1.03));
@@ -47,7 +47,7 @@ const MapUtils = {
         return tempScales;
     },
     getSplit: async (routeLayer: GeoJSONLayer) => {
-        const featureSet: FeatureSet = await routeLayer.queryFeatures();
+        const featureSet = await routeLayer.queryFeatures();
         return Math.min.apply(null, featureSet.features.map((feature) => {
             const polygon = feature.geometry as Polyline;
             const line = lineString(polygon.paths[0]);

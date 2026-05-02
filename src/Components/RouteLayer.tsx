@@ -1,18 +1,23 @@
-import { loadModules } from "@esri/react-arcgis";
-import FeatureSet from "esri/tasks/support/FeatureSet";
-import { useEffect, useState } from "react";
+import { loadModules } from "esri-loader";
+import { useEffect } from "react";
 
 interface IProps {
-    view: any;
-    map: any;
+    view?: __esri.SceneView;
+    map?: __esri.Map;
     gist: string;
-    setTour: any;
+    setTour: (routeLayer: __esri.GeoJSONLayer, picsLayer: __esri.GeoJSONLayer, view: __esri.SceneView, pointGraphic: __esri.Graphic) => Promise<void>;
 }
 
 const RouteLayer = (props: IProps) => {
-    const [layers, setLayers] = useState();
+    const { map, view, gist, setTour } = props;
 
     useEffect(() => {
+        if (!map || !view) {
+            return;
+        }
+
+        let layers: __esri.Layer[] = [];
+        let annimationGraphicsLayer: __esri.GraphicsLayer | undefined;
 
         loadModules(["esri/layers/GeoJSONLayer", "esri/layers/GraphicsLayer", "esri/Graphic"]).
             then(([GeoJSONLayer, GraphicsLayer, Graphic]) => {
@@ -29,7 +34,7 @@ const RouteLayer = (props: IProps) => {
                         },
                         type: "simple",  // autocasts as new SimpleRenderer()
                     },
-                    url: props.gist,
+                    url: gist,
                 });
 
                 const picsLayer = new GeoJSONLayer({
@@ -45,7 +50,7 @@ const RouteLayer = (props: IProps) => {
                         },
                         type: "simple",  // autocasts as new SimpleRenderer()
                     },
-                    url: props.gist,
+                    url: gist,
                     // renderer: {
                     //     type: "simple",  // autocasts as new SimpleRenderer()
                     //     symbol: {
@@ -112,18 +117,19 @@ const RouteLayer = (props: IProps) => {
                         },
                         type: "simple",  // autocasts as new SimpleRenderer()
                     },
-                    url: props.gist,
+                    url: gist,
                 });
 
                 // GRAPHICS FOR ANIMATIONS
-                const annimationGraphicsLayer = new GraphicsLayer();
-                const currentElevationInfo = {
+                const animationGraphicsLayer = new GraphicsLayer();
+                annimationGraphicsLayer = animationGraphicsLayer;
+                const currentElevationInfo: __esri.GraphicsLayerElevationInfo = {
                     mode: "relative-to-ground",
                     offset: 10,
                     unit: "feet",
                 };
-                annimationGraphicsLayer.elevationInfo = currentElevationInfo;
-                props.map.add(annimationGraphicsLayer);
+                animationGraphicsLayer.elevationInfo = currentElevationInfo;
+                map.add(animationGraphicsLayer);
 
                 const markerSymbol = {
                     color: [0, 255, 255, .25],
@@ -138,7 +144,7 @@ const RouteLayer = (props: IProps) => {
                 // -- Set Extent to the routeLayer.
                 routeLayer.when(() => {
                     const query = routeLayer.createQuery({ where: "OBJECTID = 1" });
-                    routeLayer.queryFeatures(query).then((response: FeatureSet) => {
+                    routeLayer.queryFeatures(query).then((response: __esri.FeatureSet) => {
                         const [x, y] = response.features[0].geometry.toJSON().paths[0][0];
                         const point = { type: "point", x, y };
 
@@ -146,20 +152,23 @@ const RouteLayer = (props: IProps) => {
                             geometry: point,
                             symbol: markerSymbol,
                         });
-                        annimationGraphicsLayer.add(pointGraphic);
-                        props.setTour(routeLayer, picsLayer, props.view, pointGraphic);
+                        animationGraphicsLayer.add(pointGraphic);
+                        setTour(routeLayer as __esri.GeoJSONLayer, picsLayer as __esri.GeoJSONLayer, view, pointGraphic);
                     });
                 });
 
-                setLayers([[routeLayer, picsLayer, poiLayer]]);
-                props.map.addMany([routeLayer, picsLayer, poiLayer]);
+                layers = [routeLayer, picsLayer, poiLayer];
+                map.addMany(layers);
 
             }).catch((err: any) => console.error(err));
 
         return function cleanup() {
-            props.map.removeMany(layers);
+            map.removeMany(layers);
+            if (annimationGraphicsLayer) {
+                map.remove(annimationGraphicsLayer);
+            }
         };
-    }, []);
+    }, [gist, map, setTour, view]);
 
     return null;
 

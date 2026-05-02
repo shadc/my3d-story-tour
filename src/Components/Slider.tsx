@@ -1,15 +1,16 @@
-import React, { useState } from "react";
+import React, { ChangeEvent, useState } from "react";
 
 interface IProps {
-    handleChange: any;
+    handleChange: (value: number) => void;
     initSliderVal: number;
 }
 
 const Slider = (props: IProps) => {
-    const [sliderVal, setSliderVal] = useState(props.initSliderVal);
-    const handleChange = (e: any) => {
-        setSliderVal(e.target.value);
-        props.handleChange(e.target.value);
+    const [sliderVal, setSliderVal] = useState<number>(props.initSliderVal);
+    const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+        const value = Number(e.target.value);
+        setSliderVal(value);
+        props.handleChange(value);
     };
 
     return (

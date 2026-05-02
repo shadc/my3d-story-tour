@@ -1,16 +1,13 @@
 @keyframes zoomIn {
   0% {
-    max-width:1vw;
+    transform: scale(0.02) rotate(var(--polaroid-rot, -2deg));
     opacity: 0;
-    padding: 0 0;  
-    font-size: .5vh; 
-    line-height: .5vh;
+  }
+  60% {
+    opacity: 1;
   }
   100% {
-    line-height: 3vh;
-    font-size: 2.5vh;  
-    max-width: 80vw;
-    padding: 1vh 1vh; 
+    transform: scale(1) rotate(var(--polaroid-rot, -2deg));
     opacity: 1;
   }
 }
@@ -18,17 +15,11 @@
 
 @keyframes zoomOut {
   0% {
-    font-size: 2.5vh;
-    line-height: 2.5vh;
-    max-width: 80vw;
-    padding: 1vh 1vh; 
+    transform: scale(1) rotate(var(--polaroid-rot, -2deg));
     opacity: 1;
   }
   100% {
-    font-size: .5vh;
-    line-height: 1vh;
-    max-width:  15vw;
-    padding: .5vh .5vh; 
+    transform: scale(0.18) rotate(var(--polaroid-rot, -2deg));
     opacity: 1;
   }
 }
@@ -44,20 +35,24 @@
 }
 
 .polaroidInitial{
-  font-size: 0;
-  max-width:1vw;
-  padding: 0 0;
   opacity: 0;
+  transform: scale(0.02);
 }
  
 
 .polaroid{
-  background-color: white; 
-  transform: rotate(-2deg); 
+  background-color: white;
+  padding: 1vh 1vh calc(2.5vh - 10px) 1vh;
+  font-size: 2.4vh;
+  line-height: 2.9vh;
+  max-width: 92vw;
+  --polaroid-rot: -2deg;
+  transform: rotate(var(--polaroid-rot));
 }
 
 li:nth-child(even) .polaroid{
-  transform: rotate(2deg);
+  --polaroid-rot: 2deg;
+  transform: rotate(var(--polaroid-rot));
 }
 
 .polaroidCenter{
@@ -68,6 +63,7 @@ li:nth-child(even) .polaroid{
   margin-right: -50%;
   transform: translate(-50%, -50%);
   font-family: 'Cedarville Cursive', sans-serif;
+  pointer-events: none;
 }
 
 .polaroidCenter:hover{ 
@@ -90,8 +86,34 @@ li:nth-child(even) .polaroid{
 }
 
 .picImage{
-  width:100%;
-  max-width: 80vw;
+  display: block;
+  width: auto;
+  max-width: 90vw;
+  max-height: 72vh;
+  pointer-events: none;
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+.polaroid > div {
+  margin-top: 15px;
+}
+
+.photo-continue-hint {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  padding: 10px 18px;
+  background: rgba(0, 46, 93, 0.9);
+  color: #fff;
+  font-size: 14px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  pointer-events: none;
+  z-index: 600000;
 }
 
 /* slider */
@@ -190,11 +212,36 @@ li:nth-child(even) .polaroid{
 
 
 .mapcontainer {
-  position: absolute;
-  left: 0;
-  top: 90px;
-  bottom: 0;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
   width: 100%;
+}
+
+/* Suppress the browser focus outline on all ArcGIS-injected focusable
+   elements so no black border appears when the map is clicked. */
+#base-container *:focus,
+#base-container *:focus-visible {
+  outline: none;
+}
+
+#base-container *::after {
+  outline: none !important;
+}
+
+/* Remove focus ring artifacts around top-level containers */
+.header:focus,
+.header:focus-visible,
+.mapcontainer:focus,
+.mapcontainer:focus-visible,
+#base-container:focus,
+#base-container:focus-visible,
+.mapcontainer .esri-view:focus,
+.mapcontainer .esri-view:focus-visible,
+.mapcontainer .esri-view-surface:focus,
+.mapcontainer .esri-view-surface:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .header {

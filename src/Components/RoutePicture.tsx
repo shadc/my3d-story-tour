@@ -1,7 +1,7 @@
 import React from "react";
 
 interface IProps {
-    picAction: [number, string];
+    picAction?: [number, string];
     caption: string;
     img: string;
     id: number;
@@ -13,7 +13,8 @@ const status = {
     deactive: "animateOut",
 };
 
-const RoutePicture = (props: IProps) => {
+const RoutePicture = ({ picAction = [0, ""] as [number, string], ...rest }: IProps) => {
+    const props = { picAction, ...rest };
 
     // -- Determine height (as css variable) for each image once deactiveated.
     const formatHeight: any = (height: string) => {
@@ -49,10 +50,6 @@ const RoutePicture = (props: IProps) => {
         </div>
     </li>
     );
-};
-
-RoutePicture.defaultProps = {
-    picAction: [0, ""],
 };
 
 export default RoutePicture;

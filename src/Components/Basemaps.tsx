@@ -1,15 +1,15 @@
 
-import { loadModules } from "@esri/react-arcgis";
+import { loadModules } from "esri-loader";
 import React, { useEffect, useState } from "react";
 import basemapdata from "../basemaps.json";
 
 interface IProps {
-    view: any;
-    map: any;
+    view?: any;
+    map?: any;
 }
 
 const Basemaps = (props: IProps) => {
-    const [basemaps, setBasemaps] = useState();
+    const [basemaps, setBasemaps] = useState<any[] | null>(null);
     const [basemapsCSS, setBasemapsCSS] = useState("basemapsSlideup");
 
     useEffect(() => {
@@ -17,7 +17,7 @@ const Basemaps = (props: IProps) => {
         loadModules(["esri/layers/WebTileLayer", "esri/Basemap"]).
             then(([WebTileLayer, Basemap]) => {
 
-                const basemapsArr = basemapdata.basemaps.map((b, index) => {
+                const basemapsArr = basemapdata.basemaps.map((b) => {
                     const wtl = new WebTileLayer({
                         subDomains: b.subDomains,
                         urlTemplate: b.url,
@@ -45,9 +45,15 @@ const Basemaps = (props: IProps) => {
         if (e.currentTarget.tagName.toLowerCase() === "a") {
             const elementPos = basemapdata.basemaps.map((x) => x.id)
                 .indexOf(e.currentTarget.innerHTML);
-            props.map.basemap = basemaps[elementPos];
+            if (basemaps && props.map) {
+                props.map.basemap = basemaps[elementPos];
+            }
         }
-        (basemapsCSS === "basemapsSlideup") ? setBasemapsCSS("basemapsSlidedown") : setBasemapsCSS("basemapsSlideup");
+        if (basemapsCSS === "basemapsSlideup") {
+            setBasemapsCSS("basemapsSlidedown");
+        } else {
+            setBasemapsCSS("basemapsSlideup");
+        }
     };
 
     return (
