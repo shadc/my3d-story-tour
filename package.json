@@ -21,8 +21,7 @@
     "preview": "vite preview",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
-    "typecheck": "tsc --noEmit",
-    "deploy": "vite build && gh-pages -d dist"
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
@@ -30,7 +29,6 @@
     "eslint": "^9.39.1",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
-    "gh-pages": "^6.3.0",
     "globals": "^16.5.0",
     "typescript-eslint": "^8.46.2",
     "vite": "^7.1.10"
