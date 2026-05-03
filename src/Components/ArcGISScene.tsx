@@ -1,19 +1,18 @@
-import { loadModules } from "esri-loader";
+import "@arcgis/core/assets/esri/themes/light/main.css";
+import ArcGISMap from "@arcgis/core/Map";
+import SceneView from "@arcgis/core/views/SceneView";
 import React, { ReactNode, useEffect, useMemo, useState } from "react";
 
 interface IArcGISSceneProps {
     className?: string;
-    loaderOptions?: {
-        url?: string;
-    };
     mapProperties?: Record<string, any>;
     viewProperties?: Record<string, any>;
     children?: ReactNode;
 }
 
 const ArcGISScene = (props: IArcGISSceneProps) => {
-    const [map, setMap] = useState<any>(null);
-    const [view, setView] = useState<any>(null);
+    const [map, setMap] = useState<ArcGISMap | null>(null);
+    const [view, setView] = useState<SceneView | null>(null);
     const containerId = useMemo(() => `arcgis-scene-${Math.random().toString(36).slice(2, 10)}`, []);
 
     const mapProperties = useMemo(
@@ -26,39 +25,22 @@ const ArcGISScene = (props: IArcGISSceneProps) => {
     );
 
     useEffect(() => {
-        let cancelled = false;
-        let sceneView: any = null;
+        const createdMap = new ArcGISMap(mapProperties);
+        const sceneView = new SceneView({
+            map: createdMap,
+            container: containerId,
+            ...viewProperties,
+        });
 
-        loadModules(["esri/Map", "esri/views/SceneView"], {
-            url: props.loaderOptions?.url,
-            css: true,
-        })
-            .then(([ArcGISMap, SceneView]) => {
-                if (cancelled) {
-                    return;
-                }
-
-                const createdMap = new ArcGISMap(mapProperties);
-                sceneView = new SceneView({
-                    map: createdMap,
-                    container: containerId,
-                    ...viewProperties,
-                });
-
-                setMap(createdMap);
-                setView(sceneView);
-            })
-            .catch((err: any) => console.error(err));
+        setMap(createdMap);
+        setView(sceneView);
 
         return () => {
-            cancelled = true;
-            if (sceneView) {
-                sceneView.destroy();
-            }
+            sceneView.destroy();
             setMap(null);
             setView(null);
         };
-    }, [containerId, mapProperties, props.loaderOptions?.url, viewProperties]);
+    }, [containerId, mapProperties, viewProperties]);
 
     return (
         <div id="base-container" className={props.className} style={{ width: "100%", height: "100%", position: "relative" }}>

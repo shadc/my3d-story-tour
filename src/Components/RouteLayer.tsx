@@ -1,11 +1,16 @@
-import { loadModules } from "esri-loader";
+import Graphic from "@arcgis/core/Graphic";
+import ArcGISMap from "@arcgis/core/Map";
+import Point from "@arcgis/core/geometry/Point";
+import SceneView from "@arcgis/core/views/SceneView";
+import GeoJSONLayer from "@arcgis/core/layers/GeoJSONLayer";
+import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
 import { useEffect } from "react";
 
 interface IProps {
-    view?: __esri.SceneView;
-    map?: __esri.Map;
+    view?: SceneView;
+    map?: ArcGISMap;
     gist: string;
-    setTour: (routeLayer: __esri.GeoJSONLayer, picsLayer: __esri.GeoJSONLayer, view: __esri.SceneView, pointGraphic: __esri.Graphic) => Promise<void>;
+    setTour: (routeLayer: GeoJSONLayer, picsLayer: GeoJSONLayer, view: SceneView, pointGraphic: Graphic) => Promise<void>;
 }
 
 const RouteLayer = (props: IProps) => {
@@ -16,11 +21,10 @@ const RouteLayer = (props: IProps) => {
             return;
         }
 
-        let layers: __esri.Layer[] = [];
-        let annimationGraphicsLayer: __esri.GraphicsLayer | undefined;
+        let layers: GeoJSONLayer[] = [];
+        let annimationGraphicsLayer: GraphicsLayer | undefined;
 
-        loadModules(["esri/layers/GeoJSONLayer", "esri/layers/GraphicsLayer", "esri/Graphic"]).
-            then(([GeoJSONLayer, GraphicsLayer, Graphic]) => {
+        try {
 
                 // -- Create Layers
                 const routeLayer = new GeoJSONLayer({
@@ -70,7 +74,7 @@ const RouteLayer = (props: IProps) => {
                     geometryType: "point",
                     labelingInfo: [{
                         labelExpressionInfo: {
-                            value: "{LABEL}",
+                            expression: "$feature.LABEL",
                         },
                         // When using callouts on labels, "above-center" is the only allowed position
                         labelPlacement: "above-center",
@@ -123,10 +127,10 @@ const RouteLayer = (props: IProps) => {
                 // GRAPHICS FOR ANIMATIONS
                 const animationGraphicsLayer = new GraphicsLayer();
                 annimationGraphicsLayer = animationGraphicsLayer;
-                const currentElevationInfo: __esri.GraphicsLayerElevationInfo = {
-                    mode: "relative-to-ground",
+                const currentElevationInfo = {
+                    mode: "relative-to-ground" as const,
                     offset: 10,
-                    unit: "feet",
+                    unit: "feet" as const,
                 };
                 animationGraphicsLayer.elevationInfo = currentElevationInfo;
                 map.add(animationGraphicsLayer);
@@ -135,32 +139,42 @@ const RouteLayer = (props: IProps) => {
                     color: [0, 255, 255, .25],
                     outline: { // autocasts as new SimpleLineSymbol()
                         color: [0, 255, 255, 1],
-                        width: "1px",
+                        width: 1,
                     },
                     size: 10,
-                    type: "simple-marker", // autocasts as new SimpleMarkerSymbol()
+                    type: "simple-marker" as const, // autocasts as new SimpleMarkerSymbol()
                 };
 
                 // -- Set Extent to the routeLayer.
                 routeLayer.when(() => {
-                    const query = routeLayer.createQuery({ where: "OBJECTID = 1" });
-                    routeLayer.queryFeatures(query).then((response: __esri.FeatureSet) => {
+                    const query = routeLayer.createQuery();
+                    routeLayer.queryFeatures(query).then((response) => {
+                        if (!response.features.length || !response.features[0].geometry) {
+                            return;
+                        }
+
                         const [x, y] = response.features[0].geometry.toJSON().paths[0][0];
-                        const point = { type: "point", x, y };
+                        const point = new Point({
+                            x,
+                            y,
+                            spatialReference: routeLayer.spatialReference,
+                        });
 
                         const pointGraphic = new Graphic({
                             geometry: point,
                             symbol: markerSymbol,
                         });
                         animationGraphicsLayer.add(pointGraphic);
-                        setTour(routeLayer as __esri.GeoJSONLayer, picsLayer as __esri.GeoJSONLayer, view, pointGraphic);
+                        setTour(routeLayer, picsLayer, view, pointGraphic);
                     });
                 });
 
                 layers = [routeLayer, picsLayer, poiLayer];
                 map.addMany(layers);
 
-            }).catch((err: any) => console.error(err));
+            } catch (err: any) {
+                console.error(err);
+            }
 
         return function cleanup() {
             map.removeMany(layers);

@@ -1,6 +1,8 @@
-import { Extent, Polyline } from "esri/geometry";
-import Graphic from "esri/Graphic";
-import GeoJSONLayer from "esri/layers/GeoJSONLayer";
+import Graphic from "@arcgis/core/Graphic";
+import Extent from "@arcgis/core/geometry/Extent";
+import Polyline from "@arcgis/core/geometry/Polyline";
+import GeoJSONLayer from "@arcgis/core/layers/GeoJSONLayer";
+import SceneView from "@arcgis/core/views/SceneView";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
 
@@ -13,7 +15,7 @@ import RoutePicture from "./Components/RoutePicture";
 import Slider from "./Components/Slider";
 
 interface ITour {
-    map: __esri.SceneView;
+    map: SceneView;
     routeLayer: GeoJSONLayer;
     picsLayer: GeoJSONLayer;
     splits: number;
@@ -135,8 +137,13 @@ const App = () => {
         }
 
         if (tour.map.graphics) { tour.map.graphics.removeAll(); }
-        tour.routeLayer.definitionExpression = "OBJECTID < " + tour.routeNum;
-        const graphics = await MapUtils.getGraphics(tour.routeLayer, tour.routeNum);
+        const objectIdField = tour.routeLayer.objectIdField;
+        if (objectIdField) {
+            tour.routeLayer.definitionExpression = `${objectIdField} < ${tour.routeNum}`;
+        } else {
+            tour.routeLayer.definitionExpression = null;
+        }
+        const graphics = await MapUtils.getGraphics(tour.routeLayer, tour.routeNum, objectIdField);
 
         if (!graphics.length) {
             setCaption("");
@@ -205,7 +212,11 @@ const App = () => {
 
         // -- Create Breadcrumb
         const graphic = tour.pointGraphic.clone();
-        graphic.symbol.set("size", 1);
+        const symbol = graphic.symbol?.clone() as any;
+        if (symbol) {
+            symbol.size = 1;
+            graphic.symbol = symbol;
+        }
         graphic.geometry = point;
         tour.map.graphics.add(graphic);
 
@@ -237,7 +248,7 @@ const App = () => {
         tour.coordNum++;
     };
 
-    const setTour = useCallback(async (routeLayer: GeoJSONLayer, picsLayer: GeoJSONLayer, map: __esri.SceneView, pointGraphic: Graphic) => {
+    const setTour = useCallback(async (routeLayer: GeoJSONLayer, picsLayer: GeoJSONLayer, map: SceneView, pointGraphic: Graphic) => {
         const tour = tourRef.current;
         tour.routeLayer = routeLayer;
         tour.picsLayer = picsLayer;
@@ -248,7 +259,9 @@ const App = () => {
         tour.splits = await MapUtils.getSplit(routeLayer); // .then(result => tour.splits = result);
 
         routeLayer.queryExtent().then((response: Extent) => {
-            tour.map.goTo(response.extent.expand(2), { easing: "in-out-expo" });
+            if (response.extent) {
+                tour.map.goTo(response.extent.expand(2), { easing: "in-out-expo" });
+            }
         });
 
         setPics(((await picsLayer.queryFeatures()).features as Graphic[]));
@@ -261,7 +274,6 @@ const App = () => {
         sliderChangedRef.current = true;
     };
 
-    const loaderOptions = useMemo(() => ({ url: "https://js.arcgis.com/4.11" }), []);
     const mapProperties = useMemo(() => ({
         ground: "world-elevation",
         basemap: "satellite",
@@ -273,7 +285,6 @@ const App = () => {
             <Header caption={caption} title={title} onClick={onStartTourClick} />
 
             <ArcGISScene
-                loaderOptions={loaderOptions}
                 className="mapcontainer"
                 mapProperties={mapProperties} // basemap: 'satellite',
                 viewProperties={viewProperties}

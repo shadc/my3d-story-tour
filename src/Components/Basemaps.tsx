@@ -1,5 +1,5 @@
-
-import { loadModules } from "esri-loader";
+import Basemap from "@arcgis/core/Basemap";
+import WebTileLayer from "@arcgis/core/layers/WebTileLayer";
 import React, { useEffect, useState } from "react";
 import basemapdata from "../basemaps.json";
 
@@ -13,26 +13,23 @@ const Basemaps = (props: IProps) => {
     const [basemapsCSS, setBasemapsCSS] = useState("basemapsSlideup");
 
     useEffect(() => {
-
-        loadModules(["esri/layers/WebTileLayer", "esri/Basemap"]).
-            then(([WebTileLayer, Basemap]) => {
-
-                const basemapsArr = basemapdata.basemaps.map((b) => {
-                    const wtl = new WebTileLayer({
-                        subDomains: b.subDomains,
-                        urlTemplate: b.url,
-                    });
-                    return new Basemap({
-                        baseLayers: [wtl],
-                        id: b.id,
-                        title: b.id,
-                        type: "WebTiledLayer",
-
-                    });
+        try {
+            const basemapsArr = basemapdata.basemaps.map((b) => {
+                const wtl = new WebTileLayer({
+                    subDomains: b.subDomains,
+                    urlTemplate: b.url,
                 });
-                setBasemaps(basemapsArr);
-                // tslint:disable-next-line: no-console
-            }).catch((err) => console.log(err));
+                return new Basemap({
+                    baseLayers: [wtl],
+                    id: b.id,
+                    title: b.id,
+
+                });
+            });
+            setBasemaps(basemapsArr);
+        } catch (err) {
+            console.log(err);
+        }
         // document.addEventListener('mousedown', handleClick, false);
         return () => {
             setBasemaps(null);

@@ -1,13 +1,22 @@
 import { along, bearing, length, lineString, nearestPointOnLine, point as turfPoint } from "@turf/turf";
-import { Point as EsriPoint, Polyline } from "esri/geometry";
-import Graphic from "esri/Graphic";
-import GeoJSONLayer from "esri/layers/GeoJSONLayer";
+import Graphic from "@arcgis/core/Graphic";
+import EsriPoint from "@arcgis/core/geometry/Point";
+import Polyline from "@arcgis/core/geometry/Polyline";
+import GeoJSONLayer from "@arcgis/core/layers/GeoJSONLayer";
 
 const MapUtils = {
-    getGraphics: async (routeLayer: GeoJSONLayer, i: number) => {
+    getGraphics: async (routeLayer: GeoJSONLayer, i: number, objectIdField?: string) => {
         const query = routeLayer.createQuery();
-        query.where = "OBJECTID = " + (i);
-        return (await routeLayer.queryFeatures(query)).features as Graphic[];
+        const oidField = objectIdField || routeLayer.objectIdField;
+
+        if (oidField) {
+            query.where = `${oidField} = ${i}`;
+            return (await routeLayer.queryFeatures(query)).features as Graphic[];
+        }
+
+        const featureSet = await routeLayer.queryFeatures(query);
+        const feature = featureSet.features[i - 1] as Graphic | undefined;
+        return feature ? [feature] : [];
     },
     getHeading: (point1: [number, number], point2: [number, number]) => {
         const b = bearing(turfPoint([point1[0], point1[1]]), turfPoint([point2[0], point2[1]]));
@@ -20,7 +29,12 @@ const MapUtils = {
         const line = lineString(routeCoords);
         return featureSet.features.map((feature) => {
             const esriPt = feature.geometry as EsriPoint;
-            const turfPt = turfPoint([esriPt.longitude, esriPt.latitude]);
+            const longitude = esriPt.longitude ?? esriPt.x;
+            const latitude = esriPt.latitude ?? esriPt.y;
+            if (longitude == null || latitude == null) {
+                return 0;
+            }
+            const turfPt = turfPoint([longitude, latitude]);
             const snapped = nearestPointOnLine(line, turfPt, { units: "meters" });
             return snapped.properties.index as number;
         });
