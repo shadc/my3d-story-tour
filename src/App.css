@@ -60,6 +60,7 @@ li:nth-child(even) .polaroid{
   position: absolute;
   top: 50vh;
   left: 50vw;
+  z-index: 450;
   margin-right: -50%;
   transform: translate(-50%, -50%);
   font-family: 'Cedarville Cursive', sans-serif;
@@ -104,16 +105,28 @@ li:nth-child(even) .polaroid{
   left: 50%;
   bottom: 24px;
   transform: translateX(-50%);
-  padding: 10px 18px;
+  min-height: 36px;
+  padding: 8px 14px;
   background: rgba(0, 46, 93, 0.9);
   color: #fff;
-  font-size: 14px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  border: none;
+  font-size: clamp(11px, 2.2vw, 13px);
+  line-height: 1.2;
+  letter-spacing: 0.03em;
   border-radius: 999px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
-  pointer-events: none;
+  cursor: pointer;
+  pointer-events: auto;
+  touch-action: manipulation;
   z-index: 600000;
+}
+
+.photo-continue-hint:hover {
+  background: rgba(0, 46, 93, 0.96);
+}
+
+.photo-continue-hint:active {
+  transform: translateX(-50%) scale(0.98);
 }
 
 /* slider */
@@ -248,9 +261,7 @@ li:nth-child(even) .polaroid{
   position: relative;
   top: 0;
   background: #f5f5f5;
-  height: 90px;
   color: #002e5d;
-  font-size: 28px;
   padding-left: 30px;
   padding-right: 30px;
 }
@@ -268,10 +279,40 @@ li:nth-child(even) .polaroid{
   display: inline-block
 }
 
+.tour-title {
+  overflow: hidden;
+}
+
+.tour-name {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .tour-caption {
   font-size: .80em;
   display:inline-block;
   font-family: 'Cedarville Cursive', sans-serif;
    font-weight: bold;
+}
+
+@media (max-width: 640px) {
+  .header {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .tour-name {
+    max-width: 100%;
+  }
+
+  .photo-continue-hint {
+    bottom: 16px;
+    width: auto;
+    max-width: calc(100vw - 24px);
+    padding: 8px 12px;
+    font-size: 12px;
+  }
 }
 

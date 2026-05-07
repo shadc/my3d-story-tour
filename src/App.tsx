@@ -44,6 +44,13 @@ const App = () => {
     const picIndexSetRef = useRef<Set<number>>(new Set());
     const timeoutRefs = useRef<number[]>([]);
     const awaitingPhotoAdvanceRef = useRef(false);
+    const prefersTouchInput = useMemo(() => {
+        if (typeof window === "undefined") {
+            return false;
+        }
+
+        return window.matchMedia("(hover: none), (pointer: coarse)").matches || ("ontouchstart" in window);
+    }, []);
 
     const droneView = useMemo(() => MapUtils.getUrlVars("droneView") === "true", []);
     const hidePhotos = useMemo(() => MapUtils.getUrlVars("hidePhotos") === "true", []);
@@ -92,6 +99,21 @@ const App = () => {
         };
     }, []);
 
+    const continueTourAfterPhoto = useCallback(() => {
+        if (!awaitingPhotoAdvanceRef.current) {
+            return;
+        }
+
+        awaitingPhotoAdvanceRef.current = false;
+        setAwaitingPhotoAdvance(false);
+        setPicAction([picIndexRef.current, "deactive"]);
+
+        scheduleTimeout(() => {
+            intervalRef.current = window.setInterval(startRouteInterval, intTime(sliderNumRef.current));
+            picIndexRef.current++;
+        }, 1000);
+    }, []);
+
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
             if (!awaitingPhotoAdvanceRef.current || event.code !== "Space") {
@@ -99,21 +121,14 @@ const App = () => {
             }
 
             event.preventDefault();
-            awaitingPhotoAdvanceRef.current = false;
-            setAwaitingPhotoAdvance(false);
-            setPicAction([picIndexRef.current, "deactive"]);
-
-            scheduleTimeout(() => {
-                intervalRef.current = window.setInterval(startRouteInterval, intTime(sliderNumRef.current));
-                picIndexRef.current++;
-            }, 1000);
+            continueTourAfterPhoto();
         };
 
         window.addEventListener("keydown", handleKeyDown);
         return () => {
             window.removeEventListener("keydown", handleKeyDown);
         };
-    });
+    }, [continueTourAfterPhoto]);
 
     const onStartTourClick = () => {
         const tour = tourRef.current;
@@ -294,7 +309,7 @@ const App = () => {
                 <Basemaps />
             </ArcGISScene>
 
-            {awaitingPhotoAdvance ? <div className="photo-continue-hint">Press Space to continue the tour</div> : null}
+            {awaitingPhotoAdvance ? <button type="button" className="photo-continue-hint" onClick={continueTourAfterPhoto}>{prefersTouchInput ? "Continue" : "Press Space or click to continue the tour"}</button> : null}
 
             {<ul style={{ pointerEvents: "none", margin: 0, padding: 0, listStyle: "none" }}>
                 {pics.map((pic, index) =>
