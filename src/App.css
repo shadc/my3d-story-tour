@@ -101,9 +101,9 @@ li:nth-child(even) .polaroid{
 }
 
 .photo-continue-hint {
-  position: fixed;
+  position: absolute;
   left: 50%;
-  bottom: 24px;
+  bottom: 18px;
   transform: translateX(-50%);
   min-height: 36px;
   padding: 8px 14px;
@@ -118,7 +118,7 @@ li:nth-child(even) .polaroid{
   cursor: pointer;
   pointer-events: auto;
   touch-action: manipulation;
-  z-index: 600000;
+  z-index: 2147483647;
 }
 
 .photo-continue-hint:hover {
@@ -268,6 +268,7 @@ li:nth-child(even) .polaroid{
 
 .tour-start {
   font-weight: bold;
+  font-size: 1.25rem;
   color: red;
   font-family: 'Cedarville Cursive', sans-serif;
   cursor: pointer;
@@ -285,13 +286,14 @@ li:nth-child(even) .polaroid{
 
 .tour-name {
   display: block;
+  font-size: 1.65rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .tour-caption {
-  font-size: .80em;
+  font-size: 1.25rem;
   display:inline-block;
   font-family: 'Cedarville Cursive', sans-serif;
    font-weight: bold;
@@ -304,15 +306,27 @@ li:nth-child(even) .polaroid{
   }
 
   .tour-name {
+    font-size: 1rem;
     max-width: 100%;
   }
 
+  .tour-caption {
+    font-size: 0.80em;
+  }
+
+  .tour-start {
+    font-size: 0.80em;
+  }
+
   .photo-continue-hint {
-    bottom: 16px;
+    bottom: calc(10px + env(safe-area-inset-bottom));
     width: auto;
     max-width: calc(100vw - 24px);
     padding: 8px 12px;
     font-size: 12px;
+    display: block;
+    visibility: visible;
+    opacity: 1;
   }
 }
 

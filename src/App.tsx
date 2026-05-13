@@ -289,11 +289,25 @@ const App = () => {
         sliderChangedRef.current = true;
     };
 
+    const getCollapsedTop = (index: number, totalPics: number) => {
+        const minTop = prefersTouchInput ? 14 : 10;
+        const maxTop = prefersTouchInput ? 82 : 90;
+
+        if (totalPics <= 1) {
+            return `${minTop}vh`;
+        }
+
+        const progress = index / (totalPics - 1);
+        const top = minTop + ((maxTop - minTop) * progress);
+        return `${top.toFixed(1)}vh`;
+    };
+
     const mapProperties = useMemo(() => ({
         ground: "world-elevation",
         basemap: "satellite",
     }), []);
     const viewProperties = useMemo(() => ({ zoom: 2 }), []);
+    const showContinuePrompt = awaitingPhotoAdvance || picAction[1] === "active";
 
     return (
         <>
@@ -307,15 +321,14 @@ const App = () => {
                 <Slider handleChange={sliderChange} initSliderVal={defaultSliderValue} />
                 <RouteLayer gist={geoJson} setTour={setTour} />
                 <Basemaps />
+                {showContinuePrompt ? <button type="button" className="photo-continue-hint" onClick={continueTourAfterPhoto}>{prefersTouchInput ? "Continue" : "Press Space or click to continue the tour"}</button> : null}
             </ArcGISScene>
-
-            {awaitingPhotoAdvance ? <button type="button" className="photo-continue-hint" onClick={continueTourAfterPhoto}>{prefersTouchInput ? "Continue" : "Press Space or click to continue the tour"}</button> : null}
 
             {<ul style={{ pointerEvents: "none", margin: 0, padding: 0, listStyle: "none" }}>
                 {pics.map((pic, index) =>
                     <RoutePicture
                         key={index}
-                        height={(index === 0) ? 10 + "vh" : ((85 / pics.length) * (index) + 10) + "vh"}
+                        height={getCollapsedTop(index, pics.length)}
                         id={index + 1}
                         picAction={picAction}
                         caption={pic.getAttribute("Caption")}
